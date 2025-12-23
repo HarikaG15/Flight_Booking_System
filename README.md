@@ -84,5 +84,3 @@ still ensuring all functional requirements are met.
 
 ---
 
-## Project Structure
-
