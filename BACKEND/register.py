@@ -1,19 +1,26 @@
-import cgi                      # CGI module
-from db_connect import cursor, db  # DB connection
+import cgi
+import cgitb
+import mysql.connector
+cgitb.enable()
 
-print("Content-type:text/html\n")  # HTTP header
+form = cgi.FieldStorage()
+username = form.getvalue("username")
+password = form.getvalue("password")
 
-form = cgi.FieldStorage()       # Get form data
+try:
+    conn = mysql.connector.connect(host="localhost", user="root", password="your_mysql_password", database="flight_booking")
+    cursor = conn.cursor()
 
-u = form.getvalue("username")   # Username
-p = form.getvalue("password")   # Password
-
-# Insert data into table
-cursor.execute(
-    "INSERT INTO users VALUES(%s,%s)", (u, p)
-)
-
-db.commit()                     # Save changes
-
-print("<h3>Registration Successful</h3>")  # Success message
-print("<a href='../frontend/login.html'>Login</a>")  # Login link
+    cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+    if cursor.fetchone():
+        print("<h3>Username already exists. Please choose another.</h3>")
+    else:
+        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
+        conn.commit()
+        print("<h3>Registration successful!</h3>")
+except mysql.connector.Error as err:
+    print(f"<h3>Database Error: {err}</h3>")
+finally:
+    if conn.is_connected():
+        cursor.close()
+        conn.close()
